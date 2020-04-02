@@ -7,10 +7,6 @@ DASHBOARD_REPO_RAW=https://raw.githubusercontent.com/kubernetes/dashboard
 # 输入dashboard使用的域名
 read -p "dashboard url ? :" DASHBOARD_URL
 read -p "dashboard user? :" DASHBOARD_USR
-# 执行安装
-VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${DASHBOARD_REPO}/latest -o /dev/null | sed -e 's|.*/||')
-echo "dashboard， version: ${VERSION_KUBE_DASHBOARD}"
-kubectl create -f ${DASHBOARD_REPO_RAW}/${VERSION_KUBE_DASHBOARD}/aio/deploy/recommended.yaml
 # 部署监控入口
 cat <<EOF | kubectl apply -f -
 apiVersion: extensions/v1beta1
@@ -57,3 +53,7 @@ EOF
 echo "url :   ${DASHBOARD_URL}"
 echo "user:   ${DASHBOARD_USR}"
 kubectl -n kubernetes-dashboard describe secret ${DASHBOARD_USR} -n kube-system | grep ^token
+# 执行安装
+VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${DASHBOARD_REPO}/latest -o /dev/null | sed -e 's|.*/||')
+echo "dashboard， version: ${VERSION_KUBE_DASHBOARD}"
+kubectl create -f ${DASHBOARD_REPO_RAW}/${VERSION_KUBE_DASHBOARD}/aio/deploy/recommended.yaml
