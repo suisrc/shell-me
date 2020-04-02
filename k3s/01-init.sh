@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # rancher k3s专用脚本
 # 集群入口使用nginx-ingress替换traefik
