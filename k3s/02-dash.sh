@@ -57,3 +57,4 @@ kubectl -n kubernetes-dashboard describe secret ${DASHBOARD_USR} -n kube-system 
 VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${DASHBOARD_REPO}/latest -o /dev/null | sed -e 's|.*/||')
 echo "dashboard， version: ${VERSION_KUBE_DASHBOARD}"
 kubectl create -f ${DASHBOARD_REPO_RAW}/${VERSION_KUBE_DASHBOARD}/aio/deploy/recommended.yaml
+

@@ -140,7 +140,7 @@ case ${READ_IS_SERVER} in
                 kubectl annotate node $(hostname) kilo.squat.ai/force-endpoint="$(hostname):51820"
                 curl -sSL ${KILO_REPO_FLANNEL} | kubectl apply -f -
             ;;
-            none/vxlan/ipsec/host-gw/wireguard)
+            none|vxlan|ipsec|host-gw|wireguard)
                 curl -sfL https://get.k3s.io | sh -s - server \
                   --flannel-backend=${K3S_SERVER_NETWORK} \
                   --no-deploy traefik \
