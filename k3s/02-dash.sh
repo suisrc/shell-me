@@ -1,5 +1,6 @@
 # 资源地址
 #!/bin/sh
+set -e
 
 DASHBOARD_REPO=https://github.com/kubernetes/dashboard/releases
 DASHBOARD_REPO_RAW=https://raw.githubusercontent.com/kubernetes/dashboard
@@ -10,7 +11,8 @@ kubectl create -f ${DASHBOARD_REPO_RAW}/${VERSION_KUBE_DASHBOARD}/aio/deploy/rec
 # 输入dashboard使用的域名
 read -p "dashboard url ? :" DASHBOARD_URL
 read -p "dashboard user? :" DASHBOARD_USR
-cat <<EOF >dashboard-irs.yaml
+# 部署监控入口
+cat <<EOF | kubectl apply -f -
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -52,8 +54,6 @@ subjects:
   name: ${DASHBOARD_USR}
   namespace: kube-system
 EOF
-# 暂时保留执行的内容
-kubectl apply -f dashboard-irs.yaml #&& rm -f dashboard-irs.yaml
 echo "url :   ${DASHBOARD_URL}"
 echo "user:   ${DASHBOARD_USR}"
 kubectl -n kubernetes-dashboard describe secret $DASHBOARD_USR -n kube-system | grep ^token
