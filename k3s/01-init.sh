@@ -81,7 +81,7 @@ case ${READ_IS_SERVER} in
         if [ ! ${K3S_APISERVER_PORT} ]; then
             K3S_APISERVER_PORT=6443
         fi
-        read -p "network for server?[none/vxlan(default)/ipsec/host-gw/wireguard/calico/kilo] :" K3S_SERVER_NETWORK
+        read -p "network for server?[none/vxlan(default)/ipsec/host-gw/wireguard/calico/kilo/kilo2] :" K3S_SERVER_NETWORK
         if [ ! ${K3S_SERVER_NETWORK} ]; then
              curl -sfL https://get.k3s.io | sh -s - server \
                --no-deploy traefik \
@@ -115,7 +115,7 @@ case ${READ_IS_SERVER} in
                     echo "install network... sleep 30"
                     sleep 30
                     # Step 1: install WireGuard
-                    kubectl apply -f ${KILO_WG0}
+                    curl -sSL ${KILO_WG0} | sed "s/k8s.gcr.io\/pause-amd64/rancher\/pause-amd64/g" | kubectl apply -f -
                     # Step 2: open WireGuard port
                     # Kilo uses UDP port 51820.
                     # Step 3: specify topology
@@ -130,6 +130,17 @@ case ${READ_IS_SERVER} in
                     # https://github.com/squat/kilo
                     # 需要注意kilo有2种安装方式，一种是纯kilo方式，一种是与flannel嵌入使用
                     # kilo.squat.ai/location和kilo.squat.ai/force-endpoint需要对每一个节点进行标记
+                ;;
+                kilo2)
+                    curl -sfL https://get.k3s.io | sh -s - server \
+                      --no-deploy traefik \
+                      --https-listen-port ${K3S_APISERVER_PORT}
+                    echo "install network... sleep 30"
+                    sleep 30
+                    curl -sSL ${KILO_WG0} | sed "s/k8s.gcr.io\/pause-amd64/rancher\/pause-amd64/g" | kubectl apply -f -
+                    kubectl annotate node $(hostname) kilo.squat.ai/location="master-00"
+                    kubectl annotate node $(hostname) kilo.squat.ai/force-endpoint="$(hostname):51820"
+                    curl -sSL ${KILO_REPO} | kubectl apply -f -
                 ;;
                 none/vxlan/ipsec/host-gw/wireguard)
                     curl -sfL https://get.k3s.io | sh -s - server \
