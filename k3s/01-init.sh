@@ -111,7 +111,7 @@ case ${READ_IS_SERVER} in
                       --no-deploy traefik \
                       --https-listen-port ${K3S_APISERVER_PORT}
                     echo "install kilo..."
-                    sheep 10
+                    sleep 10
                     # Step 1: install WireGuard
                     kubectl apply -f ${KILO_WG0}
                     # Step 2: open WireGuard port
