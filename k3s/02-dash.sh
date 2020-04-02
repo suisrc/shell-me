@@ -1,4 +1,6 @@
 # 资源地址
+#!/bin/sh
+
 DASHBOARD_REPO=https://github.com/kubernetes/dashboard/releases
 DASHBOARD_REPO_RAW=https://raw.githubusercontent.com/kubernetes/dashboard
 # 执行安装
