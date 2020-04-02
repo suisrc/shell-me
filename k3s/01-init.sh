@@ -42,8 +42,13 @@ EOF
 esac
 
 # 安装依赖
-yum install -y container-selinux selinux-policy-base iptables runc git
-rpm -i https://rpm.rancher.io/k3s-selinux-0.1.1-rc1.el7.noarch.rpm
+read -p "install selinux ... softs ?[y/n] :" READ_IS_INSTALL_SOFTS
+case $READ_IS_INSTALL_SOFTS in
+    [yY][eE][sS]|[yY])
+        yum install -y container-selinux selinux-policy-base iptables runc git
+        rpm -i https://rpm.rancher.io/k3s-selinux-0.1.1-rc1.el7.noarch.rpm
+        ;;
+esac
 
 #setenforce 0
 #sed -i "s/^SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
