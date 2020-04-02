@@ -56,4 +56,4 @@ subjects:
 EOF
 echo "url :   ${DASHBOARD_URL}"
 echo "user:   ${DASHBOARD_USR}"
-kubectl -n kubernetes-dashboard describe secret $DASHBOARD_USR -n kube-system | grep ^token
+kubectl -n kubernetes-dashboard describe secret ${DASHBOARD_USR} -n kube-system | grep ^token
