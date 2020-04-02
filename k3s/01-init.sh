@@ -93,6 +93,8 @@ case ${READ_IS_SERVER} in
                       --flannel-backend=none \
                       --no-deploy traefik \
                       --https-listen-port ${K3S_APISERVER_PORT}
+                    echo "install network... sleep 30"
+                    sleep 30
                     # 处理网络, 由于封闭网络对延迟特别敏感，我们这里使用跨互联网部署方式，所以必须使用非封闭网络
                     # https://rancher.com/docs/rancher/v2.x/en/faq/networking/cni-providers/
                     # kubectl apply -f https://docs.projectcalico.org/master/manifests/calico.yaml
@@ -110,8 +112,8 @@ case ${READ_IS_SERVER} in
                       --flannel-backend=none \
                       --no-deploy traefik \
                       --https-listen-port ${K3S_APISERVER_PORT}
-                    echo "install kilo..."
-                    sleep 10
+                    echo "install network... sleep 30"
+                    sleep 30
                     # Step 1: install WireGuard
                     kubectl apply -f ${KILO_WG0}
                     # Step 2: open WireGuard port
