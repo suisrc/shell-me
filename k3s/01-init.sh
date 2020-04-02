@@ -157,11 +157,11 @@ case ${READ_IS_SERVER} in
         kubectl apply -k ${NGINX_INGRESS_REPO}
         kubectl apply -f ${NGINX_INGRESS_SVC}
         # 安装dashboard
-        read -p "install kubernetes dashboard?[y/n] :" READ_IS_DASHBOARD
-        case ${READ_IS_DASHBOARD} in
-            [yY][eE][sS]|[yY])
-                curl -sSL ${DASHBOARD_SHELL} | sh -
-        esac
+        #read -p "install kubernetes dashboard?[y/n] :" READ_IS_DASHBOARD
+        #case ${READ_IS_DASHBOARD} in
+        #    [yY][eE][sS]|[yY])
+        #        curl -sSL ${DASHBOARD_SHELL} | sh -
+        #esac
         # rm -f dashboard-irs.yaml
         # 监控所有组件安装完成
         watch kubectl get pods -A -o wide
