@@ -25,13 +25,18 @@ case ${READ_IS_HOSTNAME} in
     ;;
 esac
 
-# ipv4转发
-cat > /etc/sysctl.d/k8s.conf <<EOF
+read -p "set ipv4 forward ? [y/n] :" READ_IS_FORWARD
+case ${READ_IS_FORWARD} in
+    # ipv4转发
+    [yY][eE][sS]|[yY])
+        cat > /etc/sysctl.d/k8s.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables  = 1
 net.ipv4.ip_forward                 = 1
 EOF
-sysctl --system
+        sysctl --system
+        ;;
+esac
 
 # 国内的vps， 使用dockerhub.azk8s.cn下载docker.io上的镜像
 read -p "use dockerhub.azk8s.cn?[y/n] :" READ_IS_CHINESE
