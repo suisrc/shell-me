@@ -10,10 +10,14 @@ NGINX_INGRESS_SVC=https://raw.githubusercontent.com/suisrc/k8s-nginx-ingress/mas
 CALICO_REPO=https://docs.projectcalico.org/master/manifests/calico.yaml
 DASHBOARD_REPO=https://github.com/kubernetes/dashboard/releases
 
-#read -p "hostname:" READ_HOSTNAME
-#hostnamectl set-hostname $READ_HOSTNAME
-#
-#echo "127.0.0.1       $(hostname)"  >> /etc/hosts
+read -p "set hostname ? [y/n] :" READ_IS_HOSTNAME
+case $READ_IS_HOSTNAME in
+    [yY][eE][sS]|[yY])
+        read -p "hostname:" READ_HOSTNAME
+        hostnamectl set-hostname $READ_HOSTNAME
+    echo "127.0.0.1       $(hostname)"  >> /etc/hosts
+    ;;
+esac
 
 # ipv4转发
 cat > /etc/sysctl.d/k8s.conf <<EOF
