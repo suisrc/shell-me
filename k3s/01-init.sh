@@ -8,7 +8,7 @@ set -e
 NGINX_INGRESS_REPO=https://github.com/suisrc/k8s-nginx-ingress
 NGINX_INGRESS_SVC=https://raw.githubusercontent.com/suisrc/k8s-nginx-ingress/master/25-service-metallb.yaml
 CALICO_REPO=https://docs.projectcalico.org/master/manifests/calico.yaml
-DASHBOARD_REPO=https://github.com/kubernetes/dashboard/releases
+DASHBOARD_SHELL=https://raw.githubusercontent.com/suisrc/shell-me/master/k3s/02-dash.sh
 
 read -p "set hostname ? [y/n] :" READ_IS_HOSTNAME
 case $READ_IS_HOSTNAME in
@@ -51,7 +51,7 @@ rpm -i https://rpm.rancher.io/k3s-selinux-0.1.1-rc1.el7.noarch.rpm
 #sed -i "s/^SELINUX=disabled/SELINUX=enforcing/g" /etc/selinux/config
 
 # 安装k3s
-read -p "Working by server?[y/n] :" READ_IS_SERVER
+read -p "working for server?[y/n] :" READ_IS_SERVER
 case $READ_IS_SERVER in
     [yY][eE][sS]|[yY])
         # defualt sqlite : /var/lib/rancher/k3s/server/db/state.db?_journal=WAL&cache=shared
@@ -80,60 +80,16 @@ case $READ_IS_SERVER in
         kubectl apply -k $NGINX_INGRESS_REPO
         kubectl apply -f $NGINX_INGRESS_SVC
         # 安装dashboard
-        VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${DASHBOARD_REPO}/latest -o /dev/null | sed -e 's|.*/||')
-        echo "dashboard， version: ${VERSION_KUBE_DASHBOARD}"
-        kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/${VERSION_KUBE_DASHBOARD}/aio/deploy/recommended.yaml
-        # 输入dashboard使用的域名
-        read -p "dashboard url ? :" DASHBOARD_URL
-        read -p "dashboard user? :" DASHBOARD_USR
-        cat <<EOF >dashboard-irs.yaml
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: dashboard-l2-irs
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    #nginx.ingress.kubernetes.io/ssl-passthrough: 'true'
-    nginx.ingress.kubernetes.io/backend-protocol: 'HTTPS'
-  namespace: kubernetes-dashboard
-spec:
-  rules:
-    - host: ${DASHBOARD_URL}
-      http:
-        paths:
-        - backend:
-            serviceName: kubernetes-dashboard
-            servicePort: 443
-          path: /
-  tls:
-    - hosts:
-        - ${DASHBOARD_URL}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: ${DASHBOARD_USR}
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: ${DASHBOARD_USR}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: ${DASHBOARD_USR}
-  namespace: kube-system
-EOF
-        kubectl apply -f dashboard-irs.yaml
-        echo "user: ${DASHBOARD_USR}, token======================================================="
-        kubectl -n kubernetes-dashboard describe secret $DASHBOARD_USR -n kube-system | grep ^token
+        read -p "install kubernetes dashboard?[y/n] :" READ_IS_DASHBOARD
+        case $READ_IS_DASHBOARD in
+            [yY][eE][sS]|[yY])
+                curl -sSL $DASHBOARD_SHELL | sh -
+        esac
         # rm -f dashboard-irs.yaml
         # 监控所有组件安装完成
         watch kubectl get pods -A -o wide
+        echo "K3S_URL  : $(hostname):33333"
+        echo "K3S_TOKEN: $(cat /var/lib/rancher/k3s/server/token)"
         ;;
     *)
         read -p "server endpoint? :" K3S_URL
@@ -148,3 +104,4 @@ esac
 # kubectl edit pod/svclb-ingress-nginx-svc-lcb88 -n ingress-nginx
 # kubectl logs pod/svclb-ingress-nginx-svc-lcb88 -n ingress-nginx -c lb-port-80
 # kubectl logs pod/svclb-ingress-nginx-svc-lcb88 -n ingress-nginx -c lb-port-443
+#
