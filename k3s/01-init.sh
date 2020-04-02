@@ -83,76 +83,73 @@ case ${READ_IS_SERVER} in
         fi
         read -p "network for server?[none/vxlan(default)/ipsec/host-gw/wireguard/calico/kilo/kilo2] :" K3S_SERVER_NETWORK
         if [ ! ${K3S_SERVER_NETWORK} ]; then
-             curl -sfL https://get.k3s.io | sh -s - server \
-               --no-deploy traefik \
-               --https-listen-port ${K3S_APISERVER_PORT}
-        else
-            case ${K3S_SERVER_NETWORK} in
-                calico)
-                    curl -sfL https://get.k3s.io | sh -s - server \
-                      --flannel-backend=none \
-                      --no-deploy traefik \
-                      --https-listen-port ${K3S_APISERVER_PORT}
-                    echo "install network... sleep 30"
-                    sleep 30
-                    # 处理网络, 由于封闭网络对延迟特别敏感，我们这里使用跨互联网部署方式，所以必须使用非封闭网络
-                    # https://rancher.com/docs/rancher/v2.x/en/faq/networking/cni-providers/
-                    # kubectl apply -f https://docs.projectcalico.org/master/manifests/calico.yaml
-                    # 参照《Calico CNI插件指南》，修改Calico YAML，以便在container_settings部分中允许IP转发
-                    # cat /etc/cni/net.d/10-calico.conflist
-                    curl -sSL ${CALICO_REPO} | \
-                    sed "s/\"ipam\":/\"container_settings\": {\n              \"allow_ip_forwarding\": true\n          },\n          &/g" | \
-                    kubectl apply -f -
-                    # sed "s%192.168.0.0/16%10.42.0.0/16%" | \
-                    # kubectl edit ConfigMap calico-config -n kube-system
-                ;;
-                kilo)
-                    # Kilo is a multi-cloud network overlay built on WireGuard and designed for Kubernetes.
-                    curl -sfL https://get.k3s.io | sh -s - server \
-                      --flannel-backend=none \
-                      --no-deploy traefik \
-                      --https-listen-port ${K3S_APISERVER_PORT}
-                    echo "install network... sleep 30"
-                    sleep 30
-                    # Step 1: install WireGuard
-                    curl -sSL ${KILO_WG0} | sed "s/k8s.gcr.io\/pause-amd64/rancher\/pause-amd64/g" | kubectl apply -f -
-                    # Step 2: open WireGuard port
-                    # Kilo uses UDP port 51820.
-                    # Step 3: specify topology
-                    # for node in $(kubectl get nodes | grep -i gcp | awk '{print $1}'); do kubectl annotate node $node kilo.squat.ai/location="gcp"; done
-                    # ali, tx, hw, gcp, aws, azure, home, pacificrack..., master节点被单独标记
-                    kubectl annotate node $(hostname) kilo.squat.ai/location="master-00"
-                    # Step 4: ensure nodes have public IP
-                    # https://github.com/squat/kilo/blob/master/docs/annotations.md#force-endpoint
-                    kubectl annotate node $(hostname) kilo.squat.ai/force-endpoint="$(hostname):51820"
-                    # Step 5: install Kilo!
-                    curl -sSL ${KILO_REPO} | kubectl apply -f -
-                    # https://github.com/squat/kilo
-                    # 需要注意kilo有2种安装方式，一种是纯kilo方式，一种是与flannel嵌入使用
-                    # kilo.squat.ai/location和kilo.squat.ai/force-endpoint需要对每一个节点进行标记
-                ;;
-                kilo2)
-                    curl -sfL https://get.k3s.io | sh -s - server \
-                      --no-deploy traefik \
-                      --https-listen-port ${K3S_APISERVER_PORT}
-                    echo "install network... sleep 30"
-                    sleep 30
-                    curl -sSL ${KILO_WG0} | sed "s/k8s.gcr.io\/pause-amd64/rancher\/pause-amd64/g" | kubectl apply -f -
-                    kubectl annotate node $(hostname) kilo.squat.ai/location="master-00"
-                    kubectl annotate node $(hostname) kilo.squat.ai/force-endpoint="$(hostname):51820"
-                    curl -sSL ${KILO_REPO} | kubectl apply -f -
-                ;;
-                none/vxlan/ipsec/host-gw/wireguard)
-                    curl -sfL https://get.k3s.io | sh -s - server \
-                      --flannel-backend=${K3S_SERVER_NETWORK} \
-                      --no-deploy traefik \
-                      --https-listen-port ${K3S_APISERVER_PORT}
-                ;;
-                *)
-                    echo "error: unable to process network options [${K3S_SERVER_NETWORK}]"
-                ;;
-            esac
+             K3S_SERVER_NETWORK=vxlan
         fi
+        case ${K3S_SERVER_NETWORK} in
+            calico)
+                curl -sfL https://get.k3s.io | sh -s - server \
+                  --flannel-backend=none \
+                  --no-deploy traefik \
+                  --https-listen-port ${K3S_APISERVER_PORT}
+                echo "install network... sleep 30"
+                sleep 30
+                # 处理网络, 由于封闭网络对延迟特别敏感，我们这里使用跨互联网部署方式，所以必须使用非封闭网络
+                # https://rancher.com/docs/rancher/v2.x/en/faq/networking/cni-providers/
+                # kubectl apply -f https://docs.projectcalico.org/master/manifests/calico.yaml
+                # 参照《Calico CNI插件指南》，修改Calico YAML，以便在container_settings部分中允许IP转发
+                # cat /etc/cni/net.d/10-calico.conflist
+                curl -sSL ${CALICO_REPO} | \
+                sed "s/\"ipam\":/\"container_settings\": {\n              \"allow_ip_forwarding\": true\n          },\n          &/g" | \
+                kubectl apply -f -
+                # sed "s%192.168.0.0/16%10.42.0.0/16%" | \
+                # kubectl edit ConfigMap calico-config -n kube-system
+            ;;
+            kilo)
+                # Kilo is a multi-cloud network overlay built on WireGuard and designed for Kubernetes.
+                curl -sfL https://get.k3s.io | sh -s - server \
+                  --flannel-backend=none \
+                  --no-deploy traefik \
+                  --https-listen-port ${K3S_APISERVER_PORT}
+                echo "install network... sleep 30"
+                sleep 30
+                # Step 1: install WireGuard
+                curl -sSL ${KILO_WG0} | sed "s/k8s.gcr.io\/pause-amd64/rancher\/pause-amd64/g" | kubectl apply -f -
+                # Step 2: open WireGuard port
+                # Kilo uses UDP port 51820.
+                # Step 3: specify topology
+                # for node in $(kubectl get nodes | grep -i gcp | awk '{print $1}'); do kubectl annotate node $node kilo.squat.ai/location="gcp"; done
+                # ali, tx, hw, gcp, aws, azure, home, pacificrack..., master节点被单独标记
+                kubectl annotate node $(hostname) kilo.squat.ai/location="master-00"
+                # Step 4: ensure nodes have public IP
+                # https://github.com/squat/kilo/blob/master/docs/annotations.md#force-endpoint
+                kubectl annotate node $(hostname) kilo.squat.ai/force-endpoint="$(hostname):51820"
+                # Step 5: install Kilo!
+                curl -sSL ${KILO_REPO} | kubectl apply -f -
+                # https://github.com/squat/kilo
+                # 需要注意kilo有2种安装方式，一种是纯kilo方式，一种是与flannel嵌入使用
+                # kilo.squat.ai/location和kilo.squat.ai/force-endpoint需要对每一个节点进行标记
+            ;;
+            kilo2)
+                curl -sfL https://get.k3s.io | sh -s - server \
+                  --no-deploy traefik \
+                  --https-listen-port ${K3S_APISERVER_PORT}
+                echo "install network... sleep 30"
+                sleep 30
+                curl -sSL ${KILO_WG0} | sed "s/k8s.gcr.io\/pause-amd64/rancher\/pause-amd64/g" | kubectl apply -f -
+                kubectl annotate node $(hostname) kilo.squat.ai/location="master-00"
+                kubectl annotate node $(hostname) kilo.squat.ai/force-endpoint="$(hostname):51820"
+                curl -sSL ${KILO_REPO_FLANNEL} | kubectl apply -f -
+            ;;
+            none/vxlan/ipsec/host-gw/wireguard)
+                curl -sfL https://get.k3s.io | sh -s - server \
+                  --flannel-backend=${K3S_SERVER_NETWORK} \
+                  --no-deploy traefik \
+                  --https-listen-port ${K3S_APISERVER_PORT}
+            ;;
+            *)
+                echo "error: unable to process network options [${K3S_SERVER_NETWORK}]"
+            ;;
+        esac
         # 安装nginx
         kubectl apply -k ${NGINX_INGRESS_REPO}
         kubectl apply -f ${NGINX_INGRESS_SVC}
