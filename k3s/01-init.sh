@@ -80,7 +80,7 @@ case $READ_IS_SERVER in
         kubectl apply -k $NGINX_INGRESS_REPO
         kubectl apply -f $NGINX_INGRESS_SVC
         # 安装dashboard
-        VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${GITHUB_URL}/latest -o /dev/null | sed -e 's|.*/||')
+        VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${DASHBOARD_REPO}/latest -o /dev/null | sed -e 's|.*/||')
         echo "dashboard， version: ${VERSION_KUBE_DASHBOARD}"
         kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/${VERSION_KUBE_DASHBOARD}/aio/deploy/recommended.yaml
         # 输入dashboard使用的域名
