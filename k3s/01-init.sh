@@ -145,6 +145,9 @@ case ${READ_IS_SERVER} in
         read -p "install kubernetes dashboard?[y/n] :" READ_IS_DASHBOARD
         case ${READ_IS_DASHBOARD} in
             [yY][eE][sS]|[yY])
+                # 输入dashboard使用的域名
+                read -p "dashboard url ? :" DASHBOARD_URL
+                read -p "dashboard user? :" DASHBOARD_USR
                 curl -sSL ${DASHBOARD_SHELL} | sh -
         esac
         # rm -f dashboard-irs.yaml
